@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="login-container">
+    <form method="POST" action="/login" class="login-form" id="signupForm">
+        <h2>Login</h2>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com">
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" placeholder="Enter password">
+
+        <input type="submit" value="Submit">
+        <a href="/register">No Account? Register Here!</a>
+        <p class="error" id="errorMsg"></p>
+        {% if failed %}
+        <p class="error" id="errorMsg">Login Failed</p>
+        {% endif %}
+    </form>
+</div>
+
+<script>
+const form = document.getElementById('signupForm');
+const errorMsg = document.getElementById('errorMsg');
+
+form.addEventListener('submit', function(event) {
+    event.preventDefault(); // Stop form from submitting
+
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Check all fields filled
+    if (!email || !password) {
+        errorMsg.textContent = "Please fill in all fields.";
+        return;
+    }
+
+    // If all good
+    errorMsg.textContent = "";
+    form.submit(); // Or handle submission via AJAX
+});
+</script>
+
+{% endblock %}

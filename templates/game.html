@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div id="columns">
+    <div class="column" id="col1"></div>
+    <div class="column" id="col2"></div>
+    <div class="column" id="col3"></div>
+    <div class="column" id="col4"></div>
+  </div>
+
+  <div id="input-area">
+    <input type="text" id="input" placeholder="Type word here and press Enter">
+  </div>
+
+    <div id="hud">
+    <div>Score: <span id="score">0</span></div>
+    <div>Lives: <span id="lives">3</span></div>
+    <div id="wave">Wave 0/10</div>
+  </div>
+
+  <!-- Game script -->
+  <!-- Inject variables for JS -->
+  <script>
+    window.playerID = "{{ current_user.id }}";
+    window.listName = "{{ list_name }}";
+    window.token = "{{ token }}";  // if you need CSRF or auth token
+  </script>
+
+  <!-- Game script -->
+  <script src="{{ url_for('static', filename='game.js') }}"></script>
+  <script>
+    const words = {{ words | tojson }};
+    startGame(words);
+  </script>
+{% endblock %}

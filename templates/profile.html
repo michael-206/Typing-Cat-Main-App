@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <table>
+        <tr valign="top">
+            <br>
+            <td><img src="{{ user.avatar(128) }}"></td>
+            <td></td>
+            <td>
+                <h1>User: {{ user.name }}</h1>
+                <h2>Chinese Name: {{ user.chinese_name }}</h2>
+            </td>
+        </tr>
+    </table>
+    <hr>
+    <div class="card-container">
+    {% for game in games %}
+    <div class="score-card">
+        <div class="score-card-content">
+            {% if game.score == None %}
+            <p class="error" id="errorMsg">Game Not Complete ❌</p><hr>
+            {% endif %}
+            {% if game.score != None and game.score <= 49 %}
+            <p class="error" id="errorMsg">Game Score Under 50 ❌</p><hr>
+            {% endif %}
+            {% if game.score != None and game.score > 49  and game.score <= 99%}
+            <p class="warn" id="errorMsg">Game Score between 50 and 99 ⚠️</p><hr>
+            {% endif %}
+            {% if game.score != None and game.score > 99 %}
+            <p class="ok" id="errorMsg">Game Score Over 100 ✅</p><hr>
+            {% endif %}
+        Deaths: {{ game.deaths }} <br>
+        Score: {{ game.score }} <hr>
+        List: {{ game.vocab_list }} <hr>
+        Start Time: {{ game.date_time_start }} <br>
+        End Time: {{ game.date_time_start }} <br>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}
