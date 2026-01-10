@@ -32,7 +32,7 @@ CORS(app)
 
 current_room_pin = 0
 
-app.config['SECRET_KEY'] = 'fjao;isjgja;o8wrjfvm8rqo;894ypt9hv9843abhrv97paer6vc5ii7td'
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
