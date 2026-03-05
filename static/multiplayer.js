@@ -219,7 +219,7 @@ el.style.whiteSpace = "nowrap";
 el.style.textAlign = "center";
 
 // ❄️ Snowflake background
-el.style.backgroundImage = "url('http://baipangwo.ddns.net/typing_cat3/images/9.svg')";
+el.style.backgroundImage = "url('http://chenlaoshi.ca/typing_cat3/images/9.svg')";
 el.style.backgroundSize = "contain";
 el.style.backgroundRepeat = "no-repeat";
 el.style.backgroundPosition = "center";
@@ -238,7 +238,7 @@ span.style.zIndex = "2";
 
 // 🧌 Gnome image
 const gnome = document.createElement("img");
-gnome.src = "http://baipangwo.ddns.net/typing_cat3/images/13.svg";
+gnome.src = "http://chenlaoshi.ca/typing_cat3/images/13.svg";
 gnome.style.width = "70px";   // adjust size
 gnome.style.height = "70px";
 gnome.style.position = "absolute";

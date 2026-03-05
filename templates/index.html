@@ -1,32 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1 style="text-align:center; margin-bottom:20px;">Pick a Vocab List</h1>
-  
+<h1 style="text-align:center; margin-bottom:20px;">Pick a Vocab List</h1>
+
+<div class="level-filter">
+  <a href="{{ url_for('index') }}"
+     class="level-tag {% if not selected_level %}active{% endif %}">
+    All
+  </a>
+
+  {% for level in levels %}
+    <a href="{{ url_for('index', level=level.value) }}"
+       class="level-tag {% if selected_level == level.value %}active{% endif %}">
+      {{ level.value.capitalize() }}
+    </a>
+  {% endfor %}
+</div>
+
 <div class="card-container">
   {% for vocab_list in lists %}
     <div class="vocab-card">
-      
       <div class="vocab-card-content">
-        <h3>{{ vocab_list.name }}</h3>
+        
+        <h3>{{ vocab_list.name }}</h3><h3><span class="level-tag">{{ vocab_list.level.value.capitalize() }}</span></h3>        
+        
       </div>
-
       <div class="card-actions">
         
-        <a href="{{ url_for('game', list_id=vocab_list.id) }}" class="card-btn btn-single">
+        <a href="{{ url_for('game', list_id=vocab_list.id) }}"
+           class="card-btn btn-single">
           Singleplayer
         </a>
 
-        <a href="http://172.16.8.139:5000/host/{{ vocab_list.id }}" class="card-btn btn-multi">
+        <a href="https://multiplayer.typing-cat.michaelprokoudine.ca/host/{{ vocab_list.id }}"
+           class="card-btn btn-multi">
           Multiplayer
         </a>
-
       </div>
     </div>
   {% endfor %}
 </div>
 
-  {% if current_user.admin %}
-  <p style="text-align:center; margin-top:30px;"><a href="/admin">Admin Panel</a></p>
-  {% endif %}
+{% if current_user.admin %}
+<p style="text-align:center; margin-top:30px;">
+  <a href="/admin">Admin Panel</a>
+</p>
+{% endif %}
 {% endblock %}

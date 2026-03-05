@@ -142,7 +142,7 @@
 .vocab-card {
     /* Removed text-decoration: none here, as the card itself is no longer a link */
     width: 250px; /* Made slightly wider to accommodate two buttons */
-    height: 180px; /* Fixed height is important so buttons align perfectly */
+    height: 230px; /* Fixed height is important so buttons align perfectly */
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -161,11 +161,9 @@
 }
 
 .vocab-card-content {
-    /* This pushes the buttons to the bottom */
     flex-grow: 1; 
-    
-    /* Centering the text inside the top area */
     display: flex;
+    flex-direction: column; /* stack children vertically */
     align-items: center;
     justify-content: center;
     
@@ -175,6 +173,7 @@
     text-align: center;
     color: #333;
 }
+
 
 /* --- NEW SECTIONS --- */
 
@@ -368,6 +367,34 @@
             color: green;
         }
 
+        .level-filter {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.level-tag {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.level-tag:hover {
+  background-color: #f0f0f0;
+}
+
+.level-tag.active {
+  background-color: #222;
+  color: white;
+  border-color: #222;
+}
+
 @keyframes dance {
   0%   { transform: translateX(-50%) scaleX(1); }   /* normal */
   45%  { transform: translateX(-50%) scaleX(1); }   /* hold */
@@ -389,7 +416,7 @@
         <div class="navbar-right">
             <a class="brand" href="/"><span class="emoji">🐱</span> Chinese Cat Games</a>
             <a href="/">Home</a>
-            <a href="http://172.16.8.139:5000/join">Join Multiplayer</a>
+            <a href="https://multiplayer.typing-cat.michaelprokoudine.ca/join">Join Multiplayer</a>
             {% if current_user.admin %}
             <a href="/admin">Admin Panel</a>
             {% endif %}

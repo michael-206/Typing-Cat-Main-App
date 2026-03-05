@@ -2,16 +2,21 @@ from flask import Flask, render_template, request, redirect, flash, url_for
 from flask_admin import Admin, AdminIndexView
 from flask_admin.menu import MenuLink
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.form import Select2Widget
+from wtforms.fields import SelectField
 import os
 import re
 import secrets
+from wtforms import SelectField
 import threading
 import time
 import json
 from wtforms import TextAreaField
 from hashlib import md5
+import enum
 from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 import datetime
 from flask_socketio import SocketIO, join_room, leave_room, emit
@@ -30,9 +35,10 @@ app = Flask(__name__)
 
 CORS(app)
 
+
 current_room_pin = 0
 
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -180,11 +186,23 @@ class Game(db.Model):
     
     def __repr__(self):
         return f"<Game {self.vocab_list} by {self.player.name}>"
+    
+
+class VocabListDifficulty(enum.Enum):
+    cme1 = "Level 1"
+    cme2 = "Level 2"
+    cme3 = "Level 3"
+    cme4 = "Level 4"
+    cme5 = "Level 5"
 
 class VocabList(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     _words = db.Column("words", db.Text, nullable=False)
+    level = db.Column(
+        db.Enum(VocabListDifficulty, name="level"),
+        nullable=True
+    )
 
     @property
     def words(self):
@@ -227,17 +245,34 @@ class MultiplayerGame(db.Model):
 DIVISION_CHAR = "， " 
 
 class VocabListAdmin(ModelView):
-    column_list = ('id', 'name', 'words')
-    form_columns = ('name', 'words_input')
-    form_extra_fields = {'words_input': TextAreaField('Chinese Words (comma separated)')}
+    column_list = ('id', 'name', 'words', 'level')
+    form_columns = ('name', 'words_input', 'level')
+
+    form_extra_fields = {
+        'words_input': TextAreaField('Chinese Words (comma separated)'),
+        'level': SelectField(
+            'Level',
+            choices=[
+                ('cme1', 'CME 1'),
+                ('cme2', 'CME 2'),
+                ('cme3', 'CME 3'),
+                ('cme4', 'CME 4'),
+                ('cme5', 'CME 5'),
+            ]
+        )
+    }
 
     def on_form_prefill(self, form, id):
-        vocab_list = self.session.query(self.model).get(id)
+        vocab_list = self.session.get(self.model, id)
         if vocab_list:
             form.words_input.data = DIVISION_CHAR.join(vocab_list.words)
 
     def on_model_change(self, form, model, is_created):
-        word_list = [w.strip() for w in re.split(r', |,|， |，', form.words_input.data) if w.strip()]
+        word_list = [
+            w.strip()
+            for w in re.split(r', |,|， |，', form.words_input.data or "")
+            if w.strip()
+        ]
         model._words = json.dumps(word_list)
 
     def is_accessible(self):
@@ -246,6 +281,7 @@ class VocabListAdmin(ModelView):
     def inaccessible_callback(self, name, **kwargs):
         flash("No permission")
         return redirect("/")
+
 
 class UserListAdmin(ModelView):
     column_list = ('id','name','chinese_name','email','admin')
@@ -272,20 +308,6 @@ class GameListAdmin(ModelView):
         flash("No permission")
         return redirect("/")
     
-class MultiplayerGameListAdmin(ModelView):
-    column_list = ('id','vocab_list_id','owner_name','players','game_board_state','scoreboard')
-
-    column_formatters = {'owner_name': lambda v,c,m,p: m.owner.name if m.owner else "—"}
-
-    can_create = False
-
-    def is_accessible(self):
-        return current_user.is_authenticated and current_user.admin
-
-    def inaccessible_callback(self, name, **kwargs):
-        flash("No permission")
-        return redirect("/")
-
 class MyAdminIndexView(AdminIndexView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.admin
@@ -294,19 +316,29 @@ class MyAdminIndexView(AdminIndexView):
         flash("No permission")
         return redirect("/")
 
-admin = Admin(app, name="Typing Cat Dashboard", template_mode="bootstrap4", index_view=MyAdminIndexView())
+admin = Admin(app, name="Typing Cat Dashboard", index_view=MyAdminIndexView())
 admin.add_view(VocabListAdmin(VocabList, db.session))
 admin.add_view(UserListAdmin(User, db.session))
 admin.add_view(GameListAdmin(Game, db.session))
-admin.add_view(MultiplayerGameListAdmin(MultiplayerGame,db.session))
 admin.add_link(MenuLink(name='🏠 Back to Main Site', url='/'))
 
 # ====================== Routes ======================
 @app.route("/")
 @login_required
 def index():
-    lists = VocabList.query.all()
-    return render_template("index.html", lists=lists)
+    selected_level = request.args.get("level")
+    query = VocabList.query
+    if selected_level:
+        query = query.filter(VocabList.level == VocabListDifficulty(selected_level))
+
+    lists = query.all()
+
+    return render_template(
+        "index.html",
+        lists=lists,
+        levels=VocabListDifficulty,
+        selected_level=selected_level
+    )
 
 @app.route("/game/<int:list_id>")
 @login_required
@@ -514,4 +546,4 @@ if __name__ == "__main__":
         if not os.path.exists("vocab.db"):
             db.create_all()
     #socketio.run(app, debug=True, host='0.0.0.0')
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5005)
