@@ -28,7 +28,7 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_socketio import SocketIO, join_room, emit
 import random, string, time, threading
-
+import hashlib
 
 # ====================== Flask App Setup ======================
 app = Flask(__name__)
@@ -37,6 +37,8 @@ CORS(app)
 
 
 current_room_pin = 0
+
+MIN_REACTION_MS = 120
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -47,6 +49,40 @@ login.login_view = 'signin'
 migrate = Migrate(app,db)
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+
+def verify_log(token, game_log):
+    calculated_score = 0
+    print(game_log)
+
+    previous_timestamp = None
+
+    for entry in game_log:
+        # Recompute expected hash
+        expected_hash = hashlib.sha256(
+            f"{entry['actionType']}:{entry['word']}:{entry['timestamp']}:{token}".encode()
+        ).hexdigest()
+
+        if expected_hash != entry['hash']:
+            raise ValueError("Tampered log detected!")
+
+        # Check timestamp order and minimum reaction time
+        ts = entry['timestamp']
+        if previous_timestamp is not None:
+            delta = ts - previous_timestamp
+            if delta < MIN_REACTION_MS:
+                flash(f"Impossible reaction time detected! Δ={delta}ms")
+                raise ValueError(f"Impossible timing detected! Δ={delta}ms")
+            if delta < 0:
+                flash("Timestamps out of order detected!")
+                raise ValueError("Timestamps out of order!")
+
+        previous_timestamp = ts
+
+        # Count scores
+        if entry['actionType'] == "score":
+            calculated_score += 1
+
+    return calculated_score
 
 active_games = {}  # runtime-only game state
 
@@ -355,11 +391,10 @@ def game(list_id):
 @app.route("/game/submit", methods=["POST"])
 def submit_game():
     data = request.get_json()
-    player = data["player"]
     gametoken = data["token"]
-    game = Game.query.filter_by(player_id=player).order_by(Game.date_time_start.desc()).first()
+    game = Game.query.filter_by(player_id=current_user.id).order_by(Game.date_time_start.desc()).first()
     if game.token == gametoken:
-        game.score = data["score"]
+        game.score = verify_log(gametoken, data["gamelog"])
         game.deaths = data["deaths"]
         game.date_time_end = datetime.datetime.now()
         db.session.commit()

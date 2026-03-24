@@ -24,6 +24,15 @@ let score = 0;
 let lives = 3;
 let waveActive = false;
 
+const gameLog = [];
+
+function logAction(actionType, word) {
+  const timestamp = Date.now(); // milliseconds since epoch
+  const payload = `${actionType}:${word}:${timestamp}:${window.token}`;
+  const hash = CryptoJS.SHA256(payload).toString();
+  gameLog.push({ hash, actionType, word, timestamp });
+}
+
 function delay(ms) { return new Promise(res => setTimeout(res, ms)); }
 
 function updateHUD() {
@@ -37,10 +46,8 @@ function shuffleArray(arr) { return arr.slice().sort(() => Math.random() - 0.5);
 function endGame(msg) {
 
   const data = {
-    player: window.playerID,
-    score: score,
+    gamelog: gameLog,
     deaths: 3 - lives,
-    list_name: window.listName,
     token: window.token
   };
   console.log(data)
@@ -220,6 +227,8 @@ container.appendChild(el);
       if (el.parentElement) el.remove();
       columnState[colIndex] = null;
       lives--;
+      console.log("Missed word:", word);
+      logAction("death", word);
       wordsCompletedInWave++;
       updateHUD();
 
@@ -250,8 +259,9 @@ inputBox.addEventListener("keydown", function (e) {
     clearInterval(state.intervalId);
     if (state.el && state.el.parentElement) state.el.remove();
     columnState[colIndex] = null;
-
+    console.log("Cleared word:", value);
     score++;
+    logAction("score", value);
     wordsCompletedInWave++;
     updateHUD();
 
