@@ -1,0 +1,10 @@
+app.db
+__pycache__
+migrations
+instance
+venv
+.env
+.dockerignore
+Dockerfile
+Procfile
+test_content.sh

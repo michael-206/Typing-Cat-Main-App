@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="login-container">
+    <form method="POST" action="/register" class="login-form" id="signupForm">
+        <h2>Register</h2>
+
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" placeholder="Your Name">
+
+        <label for="chinese_name">Chinese Name:</label>
+        <input type="text" id="chinese_name" name="chinese_name" placeholder="你的名字">
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com">
+
+        <input type="submit" value="Submit">
+        <p class="error" id="errorMsg"></p>
+    </form>
+</div>
+
+<script>
+const form = document.getElementById('signupForm');
+const errorMsg = document.getElementById('errorMsg');
+
+form.addEventListener('submit', function(event) {
+    event.preventDefault(); // Stop form from submitting
+
+    const name = document.getElementById('name').value.trim();
+    const chinese_name = document.getElementById('chinese_name').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    // Check all fields filled
+    if (!name || !email) {
+        errorMsg.textContent = "Please fill in all fields.";
+        return;
+    }
+
+    // If all good
+    errorMsg.textContent = "";
+    form.submit(); // Or handle submission via AJAX
+});
+</script>
+
+{% endblock %}
